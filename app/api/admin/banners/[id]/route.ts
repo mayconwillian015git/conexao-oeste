@@ -8,7 +8,8 @@ export async function PATCH(
   const body = await request.json()
   const adminClient = createAdminClient()
 
-  const { data, error } = await adminClient
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (adminClient as any)
     .from('banners')
     .update(body)
     .eq('id', params.id)

@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase'
 import Link from 'next/link'
 import BotaoDeletar from '@/components/admin/BotaoDeletar'
+import type { Noticia } from '@/lib/types'
 
 export const revalidate = 0
 
@@ -13,7 +14,7 @@ async function getNoticias(status: string) {
     .order('publicado_em', { ascending: false, nullsFirst: false })
     .order('criado_em', { ascending: false })
     .limit(100)
-  return data ?? []
+  return (data ?? []) as Noticia[]
 }
 
 const STATUS_OPTIONS = [

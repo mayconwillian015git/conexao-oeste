@@ -20,7 +20,7 @@ async function getStats() {
     pending: pendingCount ?? 0,
     published: publishedCount ?? 0,
     draft: draftCount ?? 0,
-    recentLogs: recentLogs ?? [],
+    recentLogs: (recentLogs ?? []) as Array<{ id: string; tipo: string; status: string; mensagem: string; criado_em: string }>,
   }
 }
 

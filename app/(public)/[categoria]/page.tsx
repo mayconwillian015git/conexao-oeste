@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createPublicClient } from '@/lib/supabase'
 import NoticiaCard from '@/components/public/NoticiaCard'
-import { CATEGORIAS } from '@/lib/types'
+import { CATEGORIAS, type Noticia } from '@/lib/types'
 
 interface Props {
   params: { categoria: string }
@@ -34,13 +34,14 @@ export default async function CategoriaPage({ params }: Props) {
   }
 
   const supabase = createPublicClient()
-  const { data: noticias } = await supabase
+  const { data } = await supabase
     .from('noticias')
     .select('*')
     .eq('status', 'published')
-    .eq('categoria', categoria)
+    .eq('categoria', categoria as string)
     .order('publicado_em', { ascending: false })
     .limit(30)
+  const noticias = (data ?? []) as Noticia[]
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

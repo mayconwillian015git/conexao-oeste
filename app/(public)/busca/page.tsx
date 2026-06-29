@@ -14,7 +14,8 @@ export default async function BuscaPage({ searchParams }: Props) {
 
   if (q) {
     const adminClient = createAdminClient()
-    const { data } = await adminClient.rpc('buscar_noticias', { termo: q })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (adminClient as any).rpc('buscar_noticias', { termo: q })
     noticias = data ?? []
   }
 
