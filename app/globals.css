@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+  }
+}
+
+@layer components {
+  .prose-noticia h2 {
+    @apply text-xl font-bold text-gray-900 mt-6 mb-3;
+  }
+
+  .prose-noticia h3 {
+    @apply text-lg font-semibold text-gray-800 mt-5 mb-2;
+  }
+
+  .prose-noticia p {
+    @apply text-gray-700 leading-relaxed mb-4;
+  }
+
+  .prose-noticia ul,
+  .prose-noticia ol {
+    @apply pl-6 mb-4 space-y-1;
+  }
+
+  .prose-noticia ul li {
+    @apply list-disc text-gray-700;
+  }
+
+  .prose-noticia ol li {
+    @apply list-decimal text-gray-700;
+  }
+
+  .prose-noticia blockquote {
+    @apply border-l-4 border-blue-600 pl-4 italic text-gray-600 my-4;
+  }
+
+  .prose-noticia a {
+    @apply text-blue-700 underline underline-offset-2;
+  }
+
+  .prose-noticia strong {
+    @apply font-semibold text-gray-900;
+  }
+
+  .prose-noticia img {
+    @apply rounded-lg my-4 max-w-full;
+  }
+}
+
+/* Tiptap editor */
+.ProseMirror {
+  min-height: 300px;
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
