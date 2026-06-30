@@ -4,18 +4,29 @@ import { createAdminClient } from '@/lib/supabase'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const adminClient = createAdminClient()
-  const { data, error } = await adminClient
-    .from('noticias')
-    .select('*')
-    .eq('status', 'pending_review')
-    .order('criado_em', { ascending: false })
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (error) {
-    return NextResponse.json({ error: error.message, url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'missing', key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'missing' }, { status: 500 })
+  if (!url || !key) {
+    return NextResponse.json({ error: 'missing env', url: !!url, key: !!key }, { status: 500 })
   }
 
-  return NextResponse.json(data ?? [], {
-    headers: { 'x-count': String((data ?? []).length) }
+  // Test direct fetch to Supabase REST API
+  const res = await fetch(`${url}/rest/v1/noticias?status=eq.pending_review&select=id,titulo,categoria,status,origem,publicado_em,criado_em,imagem_url&order=criado_em.desc`, {
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+    },
+    cache: 'no-store',
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    return NextResponse.json({ error: text, status: res.status }, { status: 500 })
+  }
+
+  const data = await res.json()
+  return NextResponse.json(data, {
+    headers: { 'x-count': String(data.length) }
   })
 }
