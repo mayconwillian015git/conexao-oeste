@@ -12,8 +12,10 @@ export async function GET() {
     .order('criado_em', { ascending: false })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message, url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'missing', key: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'missing' }, { status: 500 })
   }
 
-  return NextResponse.json(data ?? [])
+  return NextResponse.json(data ?? [], {
+    headers: { 'x-count': String((data ?? []).length) }
+  })
 }
