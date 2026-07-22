@@ -12,6 +12,7 @@ const navItems = [
   { href: '/admin/importar-url', label: 'Importar URL', icon: '🔗' },
   { href: '/admin/banners', label: 'Banners / Popups', icon: '🖼️' },
   { href: '/admin/fontes', label: 'Fontes RSS', icon: '📡' },
+  { href: '/admin/relatorio', label: 'Relatório de Views', icon: '📈' },
 ]
 
 export default function AdminSidebar() {
