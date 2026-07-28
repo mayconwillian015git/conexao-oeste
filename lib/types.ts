@@ -97,6 +97,8 @@ export const CATEGORIAS = [
   'Brasil',
   'Mundo',
   'Tecnologia',
+  'Agricultura',
+  'Infraestrutura',
   'Geral',
 ] as const
 
