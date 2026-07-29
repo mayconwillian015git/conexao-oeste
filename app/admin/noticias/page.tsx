@@ -1,27 +1,30 @@
 import { createAdminClient } from '@/lib/supabase'
 import Link from 'next/link'
+import { Suspense } from 'react'
 import BotaoDeletar from '@/components/admin/BotaoDeletar'
+import FiltroNoticias from '@/components/admin/FiltroNoticias'
 import type { Noticia } from '@/lib/types'
 
 export const revalidate = 0
 
-async function getNoticias(status: string) {
+async function getNoticias(status: string, busca?: string) {
   const supabase = createAdminClient()
-  const { data } = await supabase
+  let query = supabase
     .from('noticias')
-    .select('id, titulo, categoria, status, origem, publicado_em, criado_em, imagem_url')
+    .select('id, titulo, slug, categoria, status, origem, publicado_em, criado_em, imagem_url')
     .eq('status', status)
+
+  if (busca) {
+    query = query.ilike('titulo', `%${busca}%`)
+  }
+
+  const { data } = await query
     .order('publicado_em', { ascending: false, nullsFirst: false })
     .order('criado_em', { ascending: false })
     .limit(100)
+
   return (data ?? []) as Noticia[]
 }
-
-const STATUS_OPTIONS = [
-  { value: 'published', label: 'Publicadas' },
-  { value: 'draft', label: 'Rascunhos' },
-  { value: 'rejected', label: 'Rejeitadas' },
-]
 
 const ORIGEM_LABELS: Record<string, string> = {
   manual: 'Manual',
@@ -34,17 +37,21 @@ const ORIGEM_LABELS: Record<string, string> = {
 export default async function NoticiasAdminPage({
   searchParams,
 }: {
-  searchParams: { status?: string }
+  searchParams: { status?: string; busca?: string }
 }) {
   const status = searchParams.status ?? 'published'
-  const noticias = await getNoticias(status)
+  const busca = searchParams.busca ?? ''
+  const noticias = await getNoticias(status, busca)
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notícias</h1>
-          <p className="text-gray-500 text-sm mt-1">{noticias.length} registros encontrados</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {noticias.length} registros encontrados
+            {busca && <span className="ml-1 text-blue-600">para "{busca}"</span>}
+          </p>
         </div>
         <Link
           href="/admin/editor"
@@ -54,22 +61,10 @@ export default async function NoticiasAdminPage({
         </Link>
       </div>
 
-      {/* Filtro de status */}
-      <div className="flex gap-2">
-        {STATUS_OPTIONS.map((opt) => (
-          <Link
-            key={opt.value}
-            href={`/admin/noticias?status=${opt.value}`}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              status === opt.value
-                ? 'bg-blue-800 text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
-            }`}
-          >
-            {opt.label}
-          </Link>
-        ))}
-      </div>
+      {/* Filtros */}
+      <Suspense fallback={null}>
+        <FiltroNoticias />
+      </Suspense>
 
       {/* Tabela */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -117,7 +112,7 @@ export default async function NoticiasAdminPage({
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link
-                        href={`/noticia/${n.id}`}
+                        href={`/noticia/${n.slug}`}
                         target="_blank"
                         className="text-xs text-gray-500 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
                       >
