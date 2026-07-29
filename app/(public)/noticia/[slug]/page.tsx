@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { unstable_noStore as noStore } from 'next/cache'
 import { ptBR } from 'date-fns/locale'
 import { createPublicClient } from '@/lib/supabase'
 import { createAdminClient } from '@/lib/supabase'
@@ -19,6 +20,7 @@ interface Props {
 }
 
 async function getNoticia(slug: string): Promise<Noticia | null> {
+  noStore()
   const supabase = createPublicClient()
   const { data } = await supabase
     .from('noticias')
@@ -30,6 +32,7 @@ async function getNoticia(slug: string): Promise<Noticia | null> {
 }
 
 async function getImagens(noticiaId: string) {
+  noStore()
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('noticias_imagens')
@@ -40,6 +43,7 @@ async function getImagens(noticiaId: string) {
 }
 
 async function getRelated(categoria: string, currentId: string): Promise<Noticia[]> {
+  noStore()
   const supabase = createPublicClient()
   const { data } = await supabase
     .from('noticias')
@@ -48,8 +52,17 @@ async function getRelated(categoria: string, currentId: string): Promise<Noticia
     .eq('categoria', categoria)
     .neq('id', currentId)
     .order('publicado_em', { ascending: false })
-    .limit(3)
-  return data ?? []
+    .limit(9)
+
+  // Deduplicate by ID in case the database has duplicate rows
+  const seen = new Set<string>()
+  return (data ?? [])
+    .filter((n) => {
+      if (seen.has(n.id)) return false
+      seen.add(n.id)
+      return true
+    })
+    .slice(0, 3)
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -141,12 +154,13 @@ export default async function NoticiaPage({ params }: Props) {
           {imagens.length > 0 ? (
             <Carrossel imagens={imagens} titulo={noticia.titulo} />
           ) : noticia.imagem_url ? (
-            <div className="relative w-full h-72 md:h-96 mb-8 rounded-xl overflow-hidden">
+            <div className="relative w-full aspect-video mb-8 rounded-xl overflow-hidden">
               <Image
                 src={noticia.imagem_url}
                 alt={noticia.titulo}
                 fill
                 className="object-cover"
+                style={{ objectPosition: noticia.imagem_posicao ?? '50% 50%' }}
                 priority
                 sizes="(max-width: 1024px) 100vw, 66vw"
               />
@@ -162,7 +176,7 @@ export default async function NoticiaPage({ params }: Props) {
           {/* Compartilhar */}
           <BotoesCompartilhar
             titulo={noticia.titulo}
-            url={`${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://conexaooeste.com.br'}/noticia/${noticia.slug}`}
+            url={`${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://conexaooeste.com'}/noticia/${noticia.slug}`}
           />
 
           {/* Source credit */}
