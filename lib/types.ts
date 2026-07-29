@@ -99,6 +99,7 @@ export const CATEGORIAS = [
   'Tecnologia',
   'Agricultura',
   'Infraestrutura',
+  'Assistência Social',
   'Geral',
 ] as const
 
