@@ -7,6 +7,7 @@ import Link from '@tiptap/extension-link'
 import { useState, useCallback, useEffect } from 'react'
 import { CATEGORIAS, MUNICIPIOS, type Noticia } from '@/lib/types'
 import GerenciadorImagens, { type ImagemItem } from '@/components/admin/GerenciadorImagens'
+import { compressImage } from '@/lib/compress-image'
 
 interface EditorMateriaProps {
   initialData?: Partial<Noticia>
@@ -57,6 +58,7 @@ export default function EditorMateria({ initialData, onSave, isLoading }: Editor
   const [imagePreview, setImagePreview] = useState<string>(initialData?.imagem_url ?? '')
   const [imagemPosicao, setImagemPosicao] = useState<string>(initialData?.imagem_posicao ?? '50% 50%')
   const [galeria, setGaleria] = useState<ImagemItem[]>([])
+  const [galeriaCarregada, setGaleriaCarregada] = useState(!initialData?.id)
   const [saving, setSaving] = useState(false)
 
   // Carregar imagens existentes da galeria
@@ -64,8 +66,11 @@ export default function EditorMateria({ initialData, onSave, isLoading }: Editor
     if (!initialData?.id) return
     fetch(`/api/admin/noticias/${initialData.id}/imagens`)
       .then(r => r.ok ? r.json() : [])
-      .then((imgs: ImagemItem[]) => setGaleria(imgs))
-      .catch(() => {})
+      .then((imgs: ImagemItem[]) => {
+        setGaleria(imgs)
+        setGaleriaCarregada(true)
+      })
+      .catch(() => setGaleriaCarregada(true))
   }, [initialData?.id])
 
   const editor = useEditor({
@@ -104,8 +109,9 @@ export default function EditorMateria({ initialData, onSave, isLoading }: Editor
 
       // Upload image if a new file was selected
       if (imageFile) {
+        const compressed = await compressImage(imageFile)
         const formData = new FormData()
-        formData.append('file', imageFile)
+        formData.append('file', compressed)
         const uploadRes = await fetch('/api/admin/upload-imagem', {
           method: 'POST',
           body: formData,
@@ -135,7 +141,8 @@ export default function EditorMateria({ initialData, onSave, isLoading }: Editor
           meta_description: metaDescription || undefined,
           destaque,
           cidade_prefeitura: cidadePrefeitura || undefined,
-          _galeria: galeria,
+          // Só envia a galeria se já foi carregada do servidor, para não apagar imagens existentes
+          _galeria: galeriaCarregada ? galeria : undefined,
         } as Partial<Noticia> & { _galeria?: ImagemItem[] },
         publish
       )
@@ -288,7 +295,13 @@ export default function EditorMateria({ initialData, onSave, isLoading }: Editor
       </div>
 
       {/* Galeria */}
-      <GerenciadorImagens imagens={galeria} onChange={setGaleria} />
+      {galeriaCarregada ? (
+        <GerenciadorImagens imagens={galeria} onChange={setGaleria} />
+      ) : (
+        <div className="border border-gray-200 rounded-lg p-4 text-sm text-gray-400 text-center">
+          Carregando imagens...
+        </div>
+      )}
 
       {/* Rich text editor */}
       <div>
