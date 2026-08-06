@@ -163,6 +163,7 @@ export default async function NoticiaPage({ params }: Props) {
                 style={{ objectPosition: noticia.imagem_posicao ?? '50% 50%' }}
                 priority
                 sizes="(max-width: 1024px) 100vw, 66vw"
+                unoptimized
               />
             </div>
           ) : null}

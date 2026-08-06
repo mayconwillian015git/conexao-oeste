@@ -33,6 +33,7 @@ export default function NoticiaImagem({ src, alt, fill, className, style, sizes,
       style={style}
       sizes={sizes}
       priority={priority}
+      unoptimized
       onError={() => setErro(true)}
     />
   )
